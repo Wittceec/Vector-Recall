@@ -26,8 +26,21 @@ export const FileIcon = ({ name, types = DEFAULT_FILE_TYPES }: { name: string, t
 
 const NoteNode = ({ note, activeId, onSelect, depth = 0 }: { note: Note, activeId: string | null, onSelect: (id: string) => void, depth?: number }) => {
   const isToday = new Date(note.created_at).toDateString() === new Date().toDateString();
+  
+  // Hide .keep files
+  if (note.title === '.keep') return null;
+
   return (
-    <div className={"tree-row " + (activeId === note.id ? "active" : "")} style={{ paddingLeft: 12 + (depth * 14) }} onClick={() => onSelect(note.id)}>
+    <div 
+      draggable
+      onDragStart={(e) => {
+        e.stopPropagation();
+        e.dataTransfer.setData('application/json', JSON.stringify({ type: 'note', id: note.id, path: note.folder_path || '' }));
+      }}
+      className={"tree-row " + (activeId === note.id ? "active" : "")} 
+      style={{ paddingLeft: 12 + (depth * 14) }} 
+      onClick={() => onSelect(note.id)}
+    >
       <FileIcon name={note.title + ".md"} />
       <span className="truncate">{note.title || "Untitled"}</span>
       {isToday && <span className="ml-auto mono text-[10px] px-1 rounded shrink-0" style={{ background: "var(--acc-soft)", color: "var(--acc)" }}>today</span>}
@@ -35,13 +48,35 @@ const NoteNode = ({ note, activeId, onSelect, depth = 0 }: { note: Note, activeI
   );
 };
 
-const FolderNode = ({ name, path, children, activeId, onSelect, depth = 0, defaultExpanded = true }: any) => {
+const FolderNode = ({ name, path, children, activeId, onSelect, onMoveNode, depth = 0, defaultExpanded = true }: any) => {
   const [expanded, setExpanded] = React.useState(defaultExpanded);
   
   return (
     <div>
       <div 
-        className="tree-row folder text-[var(--fg-2)] hover:text-[var(--fg-1)] cursor-pointer" 
+        draggable
+        onDragStart={(e) => {
+          e.stopPropagation();
+          e.dataTransfer.setData('application/json', JSON.stringify({ type: 'folder', path }));
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.currentTarget.style.background = 'var(--bg-3)';
+        }}
+        onDragLeave={(e) => {
+          e.currentTarget.style.background = '';
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.currentTarget.style.background = '';
+          e.stopPropagation();
+          try {
+            const data = JSON.parse(e.dataTransfer.getData('application/json'));
+            if (data.path === path || path.startsWith(data.path + '/')) return;
+            onMoveNode?.(data, path);
+          } catch(err) {}
+        }}
+        className="tree-row folder text-[var(--fg-2)] hover:text-[var(--fg-1)] cursor-pointer transition-colors" 
         style={{ paddingLeft: 12 + (depth * 14) }} 
         onClick={() => setExpanded(!expanded)}
       >
@@ -53,7 +88,7 @@ const FolderNode = ({ name, path, children, activeId, onSelect, depth = 0, defau
         <div>
           {children.map((child: any) => 
             child.type === 'folder' ? (
-              <FolderNode key={child.path} {...child} activeId={activeId} onSelect={onSelect} depth={depth + 1} />
+              <FolderNode key={child.path} {...child} activeId={activeId} onSelect={onSelect} onMoveNode={onMoveNode} depth={depth + 1} />
             ) : (
               <NoteNode key={child.path} note={child.note} activeId={activeId} onSelect={onSelect} depth={depth + 1} />
             )
@@ -112,7 +147,7 @@ const buildTree = (notes: Note[]) => {
 };
 
 export const LeftSidebar = ({ 
-  notes = [], activeId = null, onSelect = () => {}, onCreateNote = () => {}, onDeleteNote, 
+  notes = [], activeId = null, onSelect = () => {}, onCreateNote = () => {}, onDeleteNote, onMoveNode,
   collapsed = false, onToggle, activeTag, setActiveTag, tagCounts 
 }: any) => {
   const [query, setQuery] = React.useState("");
@@ -161,6 +196,16 @@ export const LeftSidebar = ({
             <span className="mono text-[10.5px]" style={{ color: "var(--fg-3)" }}>· recall</span>
           </div>
           <div className="flex items-center gap-0.5">
+            <button 
+              onClick={() => {
+                const name = window.prompt("Folder name:");
+                if (name) onCreateNote('.keep', name); // We'll handle this special case in page.tsx
+              }} 
+              className="p-1 rounded hover:bg-[var(--bg-3)] text-[var(--fg-2)]" 
+              title="New folder"
+            >
+              <Icon name="folder" size={13} />
+            </button>
             <button onClick={() => onCreateNote()} className="p-1 rounded hover:bg-[var(--bg-3)] text-[var(--fg-2)]" title="New note"><Icon name="plus" size={13} /></button>
             <NoteMenu 
               onDelete={() => activeId && onDeleteNote?.(activeId)}
@@ -191,7 +236,20 @@ export const LeftSidebar = ({
         <button className={`seclabel hover:text-[var(--fg-0)] transition-colors ${tab === 'tags' ? 'text-[var(--fg-0)]' : 'text-[var(--fg-3)]'}`} onClick={() => setTab("tags")}>Tags</button>
       </div>
 
-      <div className="flex-1 scroll-y px-1.5 pb-3">
+      <div 
+        className="flex-1 scroll-y px-1.5 pb-3 min-h-[50px]"
+        onDragOver={(e) => {
+          e.preventDefault();
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          try {
+            const data = JSON.parse(e.dataTransfer.getData('application/json'));
+            if (data.path === '') return;
+            onMoveNode?.(data, '');
+          } catch(err) {}
+        }}
+      >
         {tab === "files" ? (
           <>
             {activeTag && (
@@ -204,7 +262,7 @@ export const LeftSidebar = ({
             {/* Render the folder tree root children */}
             {tree.children?.map(child => 
               child.type === 'folder' ? (
-                <FolderNode key={child.path} {...child} activeId={activeId} onSelect={onSelect} depth={0} />
+                <FolderNode key={child.path} {...child} activeId={activeId} onSelect={onSelect} onMoveNode={onMoveNode} depth={0} />
               ) : (
                 <NoteNode key={child.path} note={child.note!} activeId={activeId} onSelect={onSelect} depth={0} />
               )

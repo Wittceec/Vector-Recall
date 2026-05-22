@@ -103,6 +103,16 @@ export default function AppShell() {
     }
   }, [activeNoteId, updateNote]);
 
+  const handleLinkClick = async (title: string) => {
+    const existingNote = notes.find(n => n.title.toLowerCase() === title.toLowerCase());
+    if (existingNote) {
+      setActiveNoteId(existingNote.id);
+    } else {
+      const newNote = await createNote({ title });
+      if (newNote) setActiveNoteId(newNote.id);
+    }
+  };
+
   return (
     <div className="w-screen h-screen overflow-hidden text-[var(--fg-0)] bg-[var(--bg-0)]">
       <CommandPalette open={cmdOpen} setOpen={setCmdOpen} notes={notes} onSelectNote={setActiveNoteId} />
@@ -128,13 +138,34 @@ export default function AppShell() {
           className="relative transition-all duration-300 ease-in-out"
         >
           <LeftSidebar 
-            notes={notes}
-            activeId={activeNoteId}
+            notes={notes} 
+            activeId={activeNoteId} 
             onSelect={setActiveNoteId}
-            onCreateNote={handleCreateNote}
+            onCreateNote={async (title?: string, folder_path?: string) => {
+              const initialData = title === '.keep' && folder_path ? { title: '.keep', folder_path } : {};
+              const newNote = await createNote(initialData);
+              if (newNote) {
+                if (newNote.title !== '.keep') setActiveNoteId(newNote.id);
+                if (window.innerWidth < 768) setLeftCollapsed(true);
+              }
+            }}
             onDeleteNote={handleDeleteNote}
+            onMoveNode={(node: any, newPath: string) => {
+              if (node.type === 'note') {
+                updateNote(node.id, { folder_path: newPath });
+              } else if (node.type === 'folder') {
+                // Find all notes inside this folder and update their paths
+                notes.forEach((n: any) => {
+                  if (n.folder_path === node.path || n.folder_path?.startsWith(node.path + '/')) {
+                    const relativePath = n.folder_path.substring(node.path.length);
+                    const updatedPath = newPath ? `${newPath}${relativePath}` : relativePath.replace(/^\//, '');
+                    updateNote(n.id, { folder_path: updatedPath });
+                  }
+                });
+              }
+            }}
             collapsed={leftCollapsed} 
-            onToggle={toggleLeft}
+            onToggle={toggleLeft} 
             activeTag={activeTag}
             setActiveTag={setActiveTag}
             tagCounts={tagCounts}
@@ -176,6 +207,7 @@ export default function AppShell() {
                       onUpdate={handleUpdateContent} 
                       noteTitles={notes.map(n => n.title)}
                       tags={allTags}
+                      onLinkClick={handleLinkClick}
                     />
                   </>
                 ) : (

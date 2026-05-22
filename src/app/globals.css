@@ -96,7 +96,7 @@
 
   ::selection { background: var(--acc-soft); color: var(--fg-0); }
 
-  .wikilink {
+  .wikilink, .pill-link {
     color: var(--link);
     background: var(--link-soft);
     padding: 1px 6px;
@@ -107,7 +107,7 @@
     transition: background .12s ease, color .12s ease;
     font-weight: 500;
   }
-  .wikilink:hover { background: oklch(0.82 0.12 200 / 0.22); color: oklch(0.92 0.09 200); }
+  .wikilink:hover, .pill-link:hover { background: oklch(0.82 0.12 200 / 0.22); color: oklch(0.92 0.09 200); }
   .wikilink.broken { color: oklch(0.7 0.04 30); border-bottom-color: oklch(0.7 0.04 30 / 0.5); background: oklch(0.7 0.04 30 / 0.08); }
 
   .tag {

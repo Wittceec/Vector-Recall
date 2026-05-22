@@ -27,6 +27,8 @@ export const Icon = ({ name, size = 14, className = "", strokeWidth = 1.6 }: { n
     case "arrow-up-right": return <svg {...c}><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>;
     case "edit":       return <svg {...c}><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>;
     case "x":          return <svg {...c}><path d="M18 6 6 18M6 6l12 12"/></svg>;
+    case "undo":       return <svg {...c}><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>;
+    case "redo":       return <svg {...c}><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>;
     default: return null;
   }
 }

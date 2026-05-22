@@ -69,22 +69,27 @@ export function useNotes() {
     }
   };
 
-  const createNote = async (title = "Untitled Note", content = "") => {
+  const createNote = async (initialData: Partial<Note> = {}) => {
+    setIsSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
+    const newNote = {
+      title: 'Untitled',
+      content_markdown: '',
+      user_id: user.id,
+      ...initialData
+    };
+
     const { data, error } = await supabase
       .from('notes')
-      .insert([{ 
-        user_id: user.id, 
-        title, 
-        content_markdown: content 
-      }])
+      .insert([newNote])
       .select()
       .single();
 
     if (error) {
       console.error("Error creating note:", error);
+      setIsSaving(false);
       return null;
     }
 

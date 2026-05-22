@@ -11,6 +11,7 @@ import { common, createLowlight } from "lowlight"
 import { SlashCommand } from "./editor/SlashCommand"
 import { Wikilink, setWikilinkTitles } from "./editor/extensions/Wikilink"
 import { Hashtag, setHashtags } from "./editor/extensions/Hashtag"
+import { Icon } from "./Icons"
 
 // Configure lowlight for syntax highlighting
 const lowlight = createLowlight(common);
@@ -22,9 +23,10 @@ interface EditorProps {
   noteTitles?: string[];
   tags?: string[];
   editable?: boolean;
+  onLinkClick?: (title: string) => void;
 }
 
-export function Editor({ initialContent, onUpdate, className = "", noteTitles = [], tags = [], editable = true }: EditorProps) {
+export function Editor({ initialContent, onUpdate, className = "", noteTitles = [], tags = [], editable = true, onLinkClick }: EditorProps) {
   // Use a ref to store the latest onUpdate to avoid dependency cycle in useEditor
   const onUpdateRef = React.useRef(onUpdate);
   
@@ -96,7 +98,37 @@ export function Editor({ initialContent, onUpdate, className = "", noteTitles = 
     return null;
   }
 
+  const handleClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.classList.contains('pill-link')) {
+      const title = target.textContent?.replace(/[\[\]]/g, '');
+      if (title && onLinkClick) {
+        onLinkClick(title);
+      }
+    }
+  };
+
   return (
-    <EditorContent editor={editor} className="w-full h-full" />
+    <div className="relative w-full h-full" onClick={handleClick}>
+      <div className="absolute top-2 right-2 flex gap-1 z-10 opacity-40 hover:opacity-100 transition-opacity">
+        <button 
+          onClick={() => editor.chain().focus().undo().run()}
+          disabled={!editor.can().undo()}
+          className="p-1.5 rounded hover:bg-[var(--bg-3)] disabled:opacity-30 text-[var(--fg-2)]"
+          title="Undo (Cmd+Z)"
+        >
+          <Icon name="undo" size={14} />
+        </button>
+        <button 
+          onClick={() => editor.chain().focus().redo().run()}
+          disabled={!editor.can().redo()}
+          className="p-1.5 rounded hover:bg-[var(--bg-3)] disabled:opacity-30 text-[var(--fg-2)]"
+          title="Redo (Cmd+Shift+Z)"
+        >
+          <Icon name="redo" size={14} />
+        </button>
+      </div>
+      <EditorContent editor={editor} className="w-full h-full" />
+    </div>
   );
 }
