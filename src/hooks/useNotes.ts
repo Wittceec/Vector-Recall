@@ -153,6 +153,7 @@ export function useNotes() {
     isSaving,
     createNote,
     updateNote,
-    deleteNote
+    deleteNote,
+    refreshNotes: fetchNotes
   };
 }

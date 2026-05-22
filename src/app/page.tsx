@@ -19,7 +19,7 @@ export default function AppShell() {
   const leftPanelRef = React.useRef<any>(null);
   const rightPanelRef = React.useRef<any>(null);
 
-  const { notes, loading, isSaving, createNote, updateNote, deleteNote } = useNotes();
+  const { notes, loading, isSaving, createNote, updateNote, deleteNote, refreshNotes } = useNotes();
   const [activeNoteId, setActiveNoteId] = React.useState<string | null>(null);
   const [activeTag, setActiveTag] = React.useState<string | null>(null);
 
@@ -106,7 +106,7 @@ export default function AppShell() {
   return (
     <div className="w-screen h-screen overflow-hidden text-[var(--fg-0)] bg-[var(--bg-0)]">
       <CommandPalette open={cmdOpen} setOpen={setCmdOpen} notes={notes} onSelectNote={setActiveNoteId} />
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} onImportComplete={refreshNotes} />
       <HistoryDialog open={historyOpen} onOpenChange={setHistoryOpen} noteId={activeNoteId} onRestore={(content, title) => {
         if (activeNoteId) {
           updateNote(activeNoteId, { content_markdown: content, title });
