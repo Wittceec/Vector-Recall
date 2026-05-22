@@ -56,11 +56,24 @@ export function SettingsDialog({ open, onOpenChange, onImportComplete }: { open:
         const text = await file.text();
         const content = stripFrontmatter(text);
         const title = file.name.replace(/\.md$/i, '');
+        
+        // Extract folder path from webkitRelativePath (e.g., "Root/Sub/File.md" -> "Sub")
+        let folderPath = '';
+        if (file.webkitRelativePath) {
+          const parts = file.webkitRelativePath.split('/');
+          if (parts.length > 2) {
+            // Strip the root folder (parts[0]) and the filename (parts[parts.length - 1])
+            folderPath = parts.slice(1, -1).join('/');
+          } else if (parts.length === 2) {
+            // It's directly in the root folder, so no subfolder
+            folderPath = '';
+          }
+        }
 
         // Insert into DB
         const { data: note, error } = await supabase
           .from('notes')
-          .insert([{ user_id: user.id, title, content_markdown: content }])
+          .insert([{ user_id: user.id, title, content_markdown: content, folder_path: folderPath }])
           .select('id')
           .single();
 

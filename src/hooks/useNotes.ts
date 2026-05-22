@@ -9,6 +9,7 @@ export type Note = {
   created_at: string;
   updated_at: string;
   is_public: boolean;
+  folder_path?: string;
 }
 
 export function useNotes() {

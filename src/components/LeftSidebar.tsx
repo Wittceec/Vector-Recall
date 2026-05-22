@@ -24,15 +24,91 @@ export const FileIcon = ({ name, types = DEFAULT_FILE_TYPES }: { name: string, t
   );
 };
 
-const NoteNode = ({ note, activeId, onSelect }: { note: Note, activeId: string | null, onSelect: (id: string) => void }) => {
+const NoteNode = ({ note, activeId, onSelect, depth = 0 }: { note: Note, activeId: string | null, onSelect: (id: string) => void, depth?: number }) => {
   const isToday = new Date(note.created_at).toDateString() === new Date().toDateString();
   return (
-    <div className={"tree-row " + (activeId === note.id ? "active" : "")} style={{ paddingLeft: 8 + 14 }} onClick={() => onSelect(note.id)}>
+    <div className={"tree-row " + (activeId === note.id ? "active" : "")} style={{ paddingLeft: 12 + (depth * 14) }} onClick={() => onSelect(note.id)}>
       <FileIcon name={note.title + ".md"} />
       <span className="truncate">{note.title || "Untitled"}</span>
       {isToday && <span className="ml-auto mono text-[10px] px-1 rounded shrink-0" style={{ background: "var(--acc-soft)", color: "var(--acc)" }}>today</span>}
     </div>
   );
+};
+
+const FolderNode = ({ name, path, children, activeId, onSelect, depth = 0, defaultExpanded = true }: any) => {
+  const [expanded, setExpanded] = React.useState(defaultExpanded);
+  
+  return (
+    <div>
+      <div 
+        className="tree-row folder text-[var(--fg-2)] hover:text-[var(--fg-1)] cursor-pointer" 
+        style={{ paddingLeft: 12 + (depth * 14) }} 
+        onClick={() => setExpanded(!expanded)}
+      >
+        <span className={`transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}><Icon name="chev-right" size={11} /></span>
+        <Icon name="folder" size={13} className={expanded ? 'text-[var(--acc)]' : ''} />
+        <span className="truncate font-medium">{name}</span>
+      </div>
+      {expanded && (
+        <div>
+          {children.map((child: any) => 
+            child.type === 'folder' ? (
+              <FolderNode key={child.path} {...child} activeId={activeId} onSelect={onSelect} depth={depth + 1} />
+            ) : (
+              <NoteNode key={child.path} note={child.note} activeId={activeId} onSelect={onSelect} depth={depth + 1} />
+            )
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+type TreeNode = {
+  name: string;
+  path: string;
+  type: 'folder' | 'note';
+  children?: TreeNode[];
+  note?: Note;
+};
+
+const buildTree = (notes: Note[]) => {
+  const root: TreeNode = { name: 'root', path: '', type: 'folder', children: [] };
+  
+  notes.forEach(note => {
+    let current = root;
+    const pathParts = (note.folder_path || '').split('/').filter(Boolean);
+    
+    let currentPath = '';
+    pathParts.forEach(part => {
+      currentPath = currentPath ? `${currentPath}/${part}` : part;
+      let existing = current.children!.find(c => c.name === part && c.type === 'folder');
+      if (!existing) {
+        existing = { name: part, path: currentPath, type: 'folder', children: [] };
+        current.children!.push(existing);
+      }
+      current = existing;
+    });
+    
+    current.children!.push({
+      name: note.title,
+      path: note.id,
+      type: 'note',
+      note
+    });
+  });
+
+  const sortTree = (node: TreeNode) => {
+    if (node.children) {
+      node.children.sort((a, b) => {
+        if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
+        return a.name.localeCompare(b.name);
+      });
+      node.children.forEach(sortTree);
+    }
+  };
+  sortTree(root);
+  return root;
 };
 
 export const LeftSidebar = ({ 
@@ -52,6 +128,8 @@ export const LeftSidebar = ({
     }
     return result;
   }, [notes, query, activeTag]);
+
+  const tree = React.useMemo(() => buildTree(filteredNotes), [filteredNotes]);
 
   const sortedTags = React.useMemo(() => {
     if (!tagCounts) return [];
@@ -87,11 +165,8 @@ export const LeftSidebar = ({
             <NoteMenu 
               onDelete={() => activeId && onDeleteNote?.(activeId)}
               onRename={() => {
-                // Focus the title element if possible, or just ignore for now
                 const titleEl = document.querySelector('.prose-vc h1') as HTMLElement;
-                if (titleEl) {
-                  titleEl.focus();
-                }
+                if (titleEl) titleEl.focus();
               }}
             >
               <div className="p-1 rounded hover:bg-[var(--bg-3)] text-[var(--fg-2)] cursor-pointer" title="More"><Icon name="more" size={13} /></div>
@@ -125,9 +200,16 @@ export const LeftSidebar = ({
                 <button onClick={() => setActiveTag(null)} className="hover:opacity-80 p-0.5"><Icon name="x" size={12} /></button>
               </div>
             )}
-            {filteredNotes.map((node: Note) => (
-              <NoteNode key={node.id} note={node} activeId={activeId} onSelect={onSelect} />
-            ))}
+            
+            {/* Render the folder tree root children */}
+            {tree.children?.map(child => 
+              child.type === 'folder' ? (
+                <FolderNode key={child.path} {...child} activeId={activeId} onSelect={onSelect} depth={0} />
+              ) : (
+                <NoteNode key={child.path} note={child.note!} activeId={activeId} onSelect={onSelect} depth={0} />
+              )
+            )}
+            
             {filteredNotes.length === 0 && (
               <div className="px-3 py-4 text-center text-[12px] text-[var(--fg-2)]">
                 No notes found.
