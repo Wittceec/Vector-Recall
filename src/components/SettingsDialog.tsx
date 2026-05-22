@@ -110,9 +110,36 @@ export function SettingsDialog({ open, onOpenChange, onImportComplete }: { open:
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleWipeVault = async () => {
+    if (!window.confirm("Are you absolutely sure you want to delete ALL notes? This action cannot be undone and will permanently wipe your entire vault.")) {
+      return;
+    }
+
+    setImporting(true); // Re-use importing state to disable UI during deletion
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('notes')
+        .delete()
+        .eq('user_id', user.id); // Delete all notes belonging to the user
+
+      if (error) {
+        console.error("Failed to wipe vault:", error);
+        alert("Failed to wipe vault. Check console for details.");
+      } else {
+        if (onImportComplete) onImportComplete();
+      }
+    } catch (err) {
+      console.error("Error wiping vault:", err);
+    }
+    setImporting(false);
+  };
+
   return (
     <Dialog.Root open={open} onOpenChange={(o) => {
-      // Don't allow closing while importing
+      // Don't allow closing while importing/wiping
       if (importing) return;
       onOpenChange(o);
     }}>
@@ -155,43 +182,61 @@ export function SettingsDialog({ open, onOpenChange, onImportComplete }: { open:
             <div className="space-y-4 pt-4 border-t border-[var(--bd-1)]">
               <h3 className="text-[14px] font-semibold text-[var(--fg-0)]">Data Management</h3>
               
-              <div className="flex flex-col gap-3">
-                <div>
-                  <div className="text-[13px] font-medium text-[var(--fg-1)]">Bulk Obsidian Import</div>
-                  <div className="text-[12px] text-[var(--fg-3)]">
-                    Import a folder of Markdown files directly into your vault. Subfolders are fully supported.
+              <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <div className="text-[13px] font-medium text-[var(--fg-1)]">Bulk Obsidian Import</div>
+                    <div className="text-[12px] text-[var(--fg-3)]">
+                      Import a folder of Markdown files directly into your vault. Subfolders are fully supported.
+                    </div>
+                  </div>
+                  
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleFileChange} 
+                    className="hidden" 
+                    {...({ webkitdirectory: "", directory: "", multiple: true } as any)}
+                  />
+
+                  {!importing ? (
+                    <button 
+                      onClick={handleImportClick}
+                      className="w-full flex items-center justify-center gap-2 bg-[var(--acc)] text-white hover:bg-[var(--acc-hover)] py-2 rounded-md text-[13px] font-medium transition-colors"
+                    >
+                      <Icon name="upload" size={14} /> Import Folder
+                    </button>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-[12px] mono text-[var(--fg-2)]">
+                        <span>Processing data...</span>
+                        {total > 0 && <span>{progress} / {total}</span>}
+                      </div>
+                      <div className="w-full h-1.5 bg-[var(--bg-3)] rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-[var(--acc)] transition-all duration-200" 
+                          style={{ width: `${total > 0 ? (progress / total) * 100 : 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2 border-t border-[var(--bd-1)]">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-[13px] font-medium text-[var(--fg-1)]">Danger Zone</div>
+                      <div className="text-[12px] text-[var(--fg-3)]">Permanently delete all notes.</div>
+                    </div>
+                    <button 
+                      onClick={handleWipeVault}
+                      disabled={importing}
+                      className="px-3 py-1.5 rounded-md text-[13px] font-medium text-[#ff4d4d] border border-[#ff4d4d]/30 hover:bg-[#ff4d4d]/10 transition-colors disabled:opacity-50"
+                    >
+                      Wipe Vault
+                    </button>
                   </div>
                 </div>
-                
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={handleFileChange} 
-                  className="hidden" 
-                  {...({ webkitdirectory: "", directory: "", multiple: true } as any)}
-                />
-
-                {!importing ? (
-                  <button 
-                    onClick={handleImportClick}
-                    className="w-full flex items-center justify-center gap-2 bg-[var(--acc)] text-white hover:bg-[var(--acc-hover)] py-2 rounded-md text-[13px] font-medium transition-colors"
-                  >
-                    <Icon name="upload" size={14} /> Import Folder
-                  </button>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-[12px] mono text-[var(--fg-2)]">
-                      <span>Importing notes...</span>
-                      <span>{progress} / {total}</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-[var(--bg-3)] rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-[var(--acc)] transition-all duration-200" 
-                        style={{ width: `${(progress / total) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
