@@ -4,6 +4,7 @@ import { pipeline, env } from '@xenova/transformers';
 // Skip local model checks and use the HuggingFace Hub directly
 env.allowLocalModels = false;
 env.useBrowserCache = false;
+env.cacheDir = '/tmp';
 
 // We use a singleton pattern to ensure the model is only loaded once
 class EmbedderPipeline {
