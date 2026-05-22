@@ -2,10 +2,15 @@ import { NextResponse } from 'next/server';
 import { pipeline, env } from '@xenova/transformers';
 import { createClient } from '@supabase/supabase-js';
 import { streamText } from 'ai';
-import { google } from '@ai-sdk/google';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 
 env.allowLocalModels = false;
 env.useBrowserCache = false;
+env.cacheDir = '/tmp';
+
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
+});
 
 // Create a direct Supabase client using service role for the API
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
