@@ -1,65 +1,223 @@
-import Image from "next/image";
+"use client"
+import * as React from "react"
+import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from "react-resizable-panels"
+import { TopBar } from "@/components/TopBar"
+import { LeftSidebar } from "@/components/LeftSidebar"
+import { RightSidebar } from "@/components/RightSidebar"
+import { Editor } from "@/components/Editor"
+import { useNotes } from "@/hooks/useNotes"
 
-export default function Home() {
+import { CommandPalette } from "@/components/CommandPalette"
+import { SettingsDialog } from "@/components/SettingsDialog"
+import { HistoryDialog } from "@/components/HistoryDialog"
+import { extractTags } from "@/utils/markdownParser"
+
+export default function AppShell() {
+  const [leftCollapsed, setLeftCollapsed] = React.useState(false);
+  const [rightCollapsed, setRightCollapsed] = React.useState(false);
+
+  const leftPanelRef = React.useRef<any>(null);
+  const rightPanelRef = React.useRef<any>(null);
+
+  const { notes, loading, isSaving, createNote, updateNote, deleteNote } = useNotes();
+  const [activeNoteId, setActiveNoteId] = React.useState<string | null>(null);
+  const [activeTag, setActiveTag] = React.useState<string | null>(null);
+
+  const allTags = React.useMemo(() => {
+    const tags = new Set<string>();
+    notes.forEach(note => {
+      extractTags(note.content_markdown || "").forEach(tag => tags.add(tag));
+    });
+    return Array.from(tags).sort();
+  }, [notes]);
+
+  const tagCounts = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    notes.forEach(note => {
+      extractTags(note.content_markdown || "").forEach(tag => {
+        counts[tag] = (counts[tag] || 0) + 1;
+      });
+    });
+    return counts;
+  }, [notes]);
+
+  // Dialog states
+  const [cmdOpen, setCmdOpen] = React.useState(false);
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const [historyOpen, setHistoryOpen] = React.useState(false);
+
+  // Auto-select first note if none is selected
+  React.useEffect(() => {
+    if (!loading && notes.length > 0 && !activeNoteId) {
+      setActiveNoteId(notes[0].id);
+    }
+  }, [notes, loading, activeNoteId]);
+
+  const activeNote = notes.find(n => n.id === activeNoteId);
+
+  const toggleLeft = () => {
+    const panel = leftPanelRef.current;
+    if (panel) {
+      if (panel.isCollapsed()) {
+        panel.expand();
+        setLeftCollapsed(false);
+      } else {
+        panel.collapse();
+        setLeftCollapsed(true);
+      }
+    }
+  };
+
+  const toggleRight = () => {
+    const panel = rightPanelRef.current;
+    if (panel) {
+      if (panel.isCollapsed()) {
+        panel.expand();
+        setRightCollapsed(false);
+      } else {
+        panel.collapse();
+        setRightCollapsed(true);
+      }
+    }
+  };
+
+  const handleCreateNote = async () => {
+    const newNote = await createNote();
+    if (newNote) {
+      setActiveNoteId(newNote.id);
+    }
+  };
+
+  const handleDeleteNote = async (id: string) => {
+    await deleteNote(id);
+    if (activeNoteId === id) {
+      setActiveNoteId(null);
+    }
+  };
+
+  const handleUpdateContent = React.useCallback((content: string) => {
+    if (activeNoteId) {
+      const titleMatch = content.match(/^#\s+(.*)/m);
+      const title = titleMatch ? titleMatch[1].trim() : "Untitled Note";
+      updateNote(activeNoteId, { content_markdown: content, title });
+    }
+  }, [activeNoteId, updateNote]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="w-screen h-screen overflow-hidden text-[var(--fg-0)] bg-[var(--bg-0)]">
+      <CommandPalette open={cmdOpen} setOpen={setCmdOpen} notes={notes} onSelectNote={setActiveNoteId} />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <HistoryDialog open={historyOpen} onOpenChange={setHistoryOpen} noteId={activeNoteId} onRestore={(content, title) => {
+        if (activeNoteId) {
+          updateNote(activeNoteId, { content_markdown: content, title });
+        }
+      }} />
+
+      <PanelGroup orientation="horizontal">
+        {/* LEFT SIDEBAR */}
+        <Panel 
+          panelRef={leftPanelRef}
+          defaultSize="18%" 
+          minSize="12%" 
+          maxSize="30%" 
+          collapsible 
+          collapsedSize="4%"
+          onResize={() => {
+            if (leftPanelRef.current) setLeftCollapsed(leftPanelRef.current.isCollapsed());
+          }}
+          className="relative transition-all duration-300 ease-in-out"
+        >
+          <LeftSidebar 
+            notes={notes}
+            activeId={activeNoteId}
+            onSelect={setActiveNoteId}
+            onCreateNote={handleCreateNote}
+            onDeleteNote={handleDeleteNote}
+            collapsed={leftCollapsed} 
+            onToggle={toggleLeft}
+            activeTag={activeTag}
+            setActiveTag={setActiveTag}
+            tagCounts={tagCounts}
+          />
+        </Panel>
+
+        <PanelResizeHandle className="vresizer" />
+
+        {/* CENTER MAIN */}
+        <Panel defaultSize="62%" className="flex flex-col">
+          <TopBar 
+            onToggleLeft={toggleLeft} 
+            onToggleRight={toggleRight} 
+            onOpenCmdK={() => setCmdOpen(true)}
+            onOpenAsk={() => setCmdOpen(true)}
+            onOpenSettings={() => setSettingsOpen(true)}
+            onOpenHistory={() => setHistoryOpen(true)}
+            breadcrumb={["Vault", activeNote?.title || "Untitled Note"]} 
+            isSaving={isSaving}
+          />
+          
+          <main className="flex-1 overflow-hidden relative flex flex-col">
+            <div className="absolute inset-0 grid-bg opacity-40 pointer-events-none" />
+            <div className="scroll-y w-full h-full relative z-10 px-8 py-10 md:px-16 md:py-16">
+              
+              <div className="max-w-3xl mx-auto h-full flex flex-col">
+                {loading ? (
+                  <div className="text-[var(--fg-2)]">Loading notes...</div>
+                ) : activeNote ? (
+                  <>
+                    <div className="mb-4">
+                      <div className="flex items-center gap-3 text-[11.5px] text-[var(--fg-2)] mono">
+                        <span>Created: {new Date(activeNote.created_at).toLocaleDateString()}</span>
+                        <span>Modified: {new Date(activeNote.updated_at).toLocaleTimeString()}</span>
+                      </div>
+                    </div>
+                    <Editor 
+                      initialContent={activeNote.content_markdown || `# ${activeNote.title}\n\nStart typing...`} 
+                      onUpdate={handleUpdateContent} 
+                      noteTitles={notes.map(n => n.title)}
+                      tags={allTags}
+                    />
+                  </>
+                ) : (
+                  <div className="text-center text-[var(--fg-2)] mt-20">
+                    <p>No notes found. Create a new note to get started.</p>
+                    <button onClick={handleCreateNote} className="mt-4 px-4 py-2 rounded bg-[var(--acc-soft)] text-[var(--acc)] hover:opacity-80">
+                      Create Note
+                    </button>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          </main>
+        </Panel>
+
+        <PanelResizeHandle className="vresizer" />
+
+        {/* RIGHT SIDEBAR */}
+        <Panel 
+          panelRef={rightPanelRef}
+          defaultSize="20%" 
+          minSize="15%" 
+          maxSize="35%" 
+          collapsible 
+          collapsedSize="4%"
+          onResize={() => {
+            if (rightPanelRef.current) setRightCollapsed(rightPanelRef.current.isCollapsed());
+          }}
+          className="relative transition-all duration-300 ease-in-out"
+        >
+          <RightSidebar 
+            notes={notes}
+            activeId={activeNoteId}
+            onLinkClick={setActiveNoteId}
+            onUpdateNote={updateNote}
+            collapsed={rightCollapsed} 
+            onToggle={toggleRight} 
+          />
+        </Panel>
+
+      </PanelGroup>
     </div>
-  );
+  )
 }
