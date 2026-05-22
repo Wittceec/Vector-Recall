@@ -117,7 +117,7 @@ export function Editor({ initialContent, onUpdate, className = "", noteTitles = 
 
   return (
     <div className="relative w-full h-full" onClick={handleClick}>
-      <div className="absolute top-2 right-2 flex gap-1 z-10 opacity-40 hover:opacity-100 transition-opacity">
+      <div className="absolute top-2 right-4 flex gap-1.5 z-10 bg-[var(--bg-1)] p-1 rounded-md border border-[var(--bg-3)] shadow-sm">
         <button 
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}

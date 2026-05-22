@@ -48,9 +48,13 @@ const NoteNode = ({ note, activeId, onSelect, depth = 0 }: { note: Note, activeI
   );
 };
 
-const FolderNode = ({ name, path, children, activeId, onSelect, onMoveNode, onDeleteFolder, depth = 0, defaultExpanded = true }: any) => {
+const FolderNode = ({ name, path, children, activeId, onSelect, onMoveNode, onDeleteFolder, depth = 0, defaultExpanded = false, collapseTrigger = 0 }: any) => {
   const [expanded, setExpanded] = React.useState(defaultExpanded);
   
+  React.useEffect(() => {
+    if (collapseTrigger > 0) setExpanded(false);
+  }, [collapseTrigger]);
+
   return (
     <div>
       <div 
@@ -115,7 +119,7 @@ const FolderNode = ({ name, path, children, activeId, onSelect, onMoveNode, onDe
         <div>
           {children.map((child: any) => 
             child.type === 'folder' ? (
-              <FolderNode key={child.path} {...child} activeId={activeId} onSelect={onSelect} onMoveNode={onMoveNode} onDeleteFolder={onDeleteFolder} depth={depth + 1} />
+              <FolderNode key={child.path} {...child} activeId={activeId} onSelect={onSelect} onMoveNode={onMoveNode} onDeleteFolder={onDeleteFolder} depth={depth + 1} collapseTrigger={collapseTrigger} />
             ) : (
               <NoteNode key={child.path} note={child.note} activeId={activeId} onSelect={onSelect} depth={depth + 1} />
             )
@@ -194,6 +198,7 @@ export const LeftSidebar = ({
 }: LeftSidebarProps) => {
   const [query, setQuery] = React.useState("");
   const [tab, setTab] = React.useState<"files" | "tags">("files");
+  const [collapseTrigger, setCollapseTrigger] = React.useState(0);
 
   const filteredNotes = React.useMemo(() => {
     let result = notes;
@@ -239,6 +244,13 @@ export const LeftSidebar = ({
             <span className="mono text-[10.5px]" style={{ color: "var(--fg-3)" }}>· recall</span>
           </div>
           <div className="flex items-center gap-0.5">
+            <button 
+              onClick={() => setCollapseTrigger(prev => prev + 1)}
+              className="p-1 rounded hover:bg-[var(--bg-3)] text-[var(--fg-2)]" 
+              title="Collapse all folders"
+            >
+              <Icon name="chevrons-up" size={13} />
+            </button>
             <button 
               onClick={() => {
                 const name = window.prompt("Folder name:");
@@ -304,7 +316,7 @@ export const LeftSidebar = ({
             
             {filteredTree.map((child: any) => 
               child.type === 'folder' ? (
-                <FolderNode key={child.path} {...child} activeId={activeId} onSelect={onSelect} onMoveNode={onMoveNode} onDeleteFolder={onDeleteFolder} />
+                <FolderNode key={child.path} {...child} activeId={activeId} onSelect={onSelect} onMoveNode={onMoveNode} onDeleteFolder={onDeleteFolder} collapseTrigger={collapseTrigger} />
               ) : (
                 <NoteNode key={child.path} note={child.note!} activeId={activeId} onSelect={onSelect} />
               )
