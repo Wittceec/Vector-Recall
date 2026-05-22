@@ -89,27 +89,31 @@ export function Editor({ initialContent, onUpdate, className = "", noteTitles = 
     },
   });
 
+  const handleClick = (e: React.MouseEvent) => {
+    const target = (e.target as HTMLElement).closest('.pill-link') as HTMLElement;
+    if (target) {
+      // Use data-id if available, otherwise fallback to text content
+      let title = target.getAttribute('data-id');
+      if (!title) {
+        title = target.textContent?.replace(/[\[\]]/g, '') || '';
+      }
+      if (title && onLinkClick) {
+        onLinkClick(title.trim());
+      }
+    }
+  };
+
   // Update editor content when initialContent changes significantly (like switching notes)
   // We use a separate useEffect to prevent jumping cursor on every keystroke
   React.useEffect(() => {
     if (editor && initialContent !== (editor.storage as any).markdown.getMarkdown()) {
-      editor.commands.setContent(initialContent);
+      editor.commands.setContent(initialContent, { emitUpdate: false });
     }
   }, [initialContent, editor]);
 
   if (!editor) {
     return null;
   }
-
-  const handleClick = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.classList.contains('pill-link')) {
-      const title = target.textContent?.replace(/[\[\]]/g, '');
-      if (title && onLinkClick) {
-        onLinkClick(title);
-      }
-    }
-  };
 
   return (
     <div className="relative w-full h-full" onClick={handleClick}>

@@ -48,7 +48,7 @@ const NoteNode = ({ note, activeId, onSelect, depth = 0 }: { note: Note, activeI
   );
 };
 
-const FolderNode = ({ name, path, children, activeId, onSelect, onMoveNode, depth = 0, defaultExpanded = true }: any) => {
+const FolderNode = ({ name, path, children, activeId, onSelect, onMoveNode, onDeleteFolder, depth = 0, defaultExpanded = true }: any) => {
   const [expanded, setExpanded] = React.useState(defaultExpanded);
   
   return (
@@ -57,7 +57,7 @@ const FolderNode = ({ name, path, children, activeId, onSelect, onMoveNode, dept
         draggable
         onDragStart={(e) => {
           e.stopPropagation();
-          e.dataTransfer.setData('application/json', JSON.stringify({ type: 'folder', path }));
+          e.dataTransfer.setData('application/json', JSON.stringify({ type: 'folder', path, name }));
         }}
         onDragOver={(e) => {
           e.preventDefault();
@@ -76,19 +76,46 @@ const FolderNode = ({ name, path, children, activeId, onSelect, onMoveNode, dept
             onMoveNode?.(data, path);
           } catch(err) {}
         }}
-        className="tree-row folder text-[var(--fg-2)] hover:text-[var(--fg-1)] cursor-pointer transition-colors" 
+        className="tree-row folder text-[var(--fg-2)] hover:text-[var(--fg-1)] cursor-pointer transition-colors group" 
         style={{ paddingLeft: 12 + (depth * 14) }} 
         onClick={() => setExpanded(!expanded)}
       >
-        <span className={`transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}><Icon name="chev-right" size={11} /></span>
-        <Icon name="folder" size={13} className={expanded ? 'text-[var(--acc)]' : ''} />
-        <span className="truncate font-medium">{name}</span>
+        <span className={`transition-transform duration-200 shrink-0 ${expanded ? 'rotate-90' : ''}`}><Icon name="chev-right" size={11} /></span>
+        <Icon name="folder" size={13} className={`shrink-0 ${expanded ? 'text-[var(--acc)]' : ''}`} />
+        <span className="truncate font-medium flex-1">{name}</span>
+        <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1.5 pr-1" onClick={e => e.stopPropagation()}>
+          <button 
+            title="Rename folder" 
+            className="hover:text-[var(--acc)] transition-colors"
+            onClick={() => {
+              const newName = window.prompt("Rename folder:", name);
+              if (newName && newName !== name) {
+                const parts = path.split('/');
+                parts[parts.length - 1] = newName;
+                onMoveNode?.({ type: 'folder', path, name }, parts.slice(0, -1).join('/'));
+              }
+            }}
+          >
+            <Icon name="edit" size={11} />
+          </button>
+          <button 
+            title="Delete folder" 
+            className="hover:text-[#e06c75] transition-colors"
+            onClick={() => {
+              if (window.confirm(`Delete folder "${name}" and all notes inside it?`)) {
+                onDeleteFolder?.(path);
+              }
+            }}
+          >
+            <Icon name="x" size={11} />
+          </button>
+        </div>
       </div>
       {expanded && (
         <div>
           {children.map((child: any) => 
             child.type === 'folder' ? (
-              <FolderNode key={child.path} {...child} activeId={activeId} onSelect={onSelect} onMoveNode={onMoveNode} depth={depth + 1} />
+              <FolderNode key={child.path} {...child} activeId={activeId} onSelect={onSelect} onMoveNode={onMoveNode} onDeleteFolder={onDeleteFolder} depth={depth + 1} />
             ) : (
               <NoteNode key={child.path} note={child.note} activeId={activeId} onSelect={onSelect} depth={depth + 1} />
             )
@@ -146,10 +173,25 @@ const buildTree = (notes: Note[]) => {
   return root;
 };
 
+interface LeftSidebarProps {
+  notes: any[];
+  activeId: string | null;
+  onSelect: (id: string) => void;
+  onCreateNote: (title?: string, folder_path?: string) => void;
+  onDeleteNote: (id: string) => void;
+  onMoveNode?: (node: any, newPath: string) => void;
+  onDeleteFolder?: (path: string) => void;
+  collapsed?: boolean;
+  onToggle?: () => void;
+  activeTag?: string | null;
+  setActiveTag?: (tag: string | null) => void;
+  tagCounts?: Record<string, number>;
+}
+
 export const LeftSidebar = ({ 
-  notes = [], activeId = null, onSelect = () => {}, onCreateNote = () => {}, onDeleteNote, onMoveNode,
+  notes = [], activeId = null, onSelect = () => {}, onCreateNote = () => {}, onDeleteNote, onMoveNode, onDeleteFolder,
   collapsed = false, onToggle, activeTag, setActiveTag, tagCounts 
-}: any) => {
+}: LeftSidebarProps) => {
   const [query, setQuery] = React.useState("");
   const [tab, setTab] = React.useState<"files" | "tags">("files");
 
@@ -165,6 +207,7 @@ export const LeftSidebar = ({
   }, [notes, query, activeTag]);
 
   const tree = React.useMemo(() => buildTree(filteredNotes), [filteredNotes]);
+  const filteredTree = tree.children || [];
 
   const sortedTags = React.useMemo(() => {
     if (!tagCounts) return [];
@@ -199,7 +242,7 @@ export const LeftSidebar = ({
             <button 
               onClick={() => {
                 const name = window.prompt("Folder name:");
-                if (name) onCreateNote('.keep', name); // We'll handle this special case in page.tsx
+                if (name) onCreateNote('.keep', name);
               }} 
               className="p-1 rounded hover:bg-[var(--bg-3)] text-[var(--fg-2)]" 
               title="New folder"
@@ -255,16 +298,15 @@ export const LeftSidebar = ({
             {activeTag && (
               <div className="px-2 py-1 mb-2 mx-1.5 text-[11.5px] flex items-center justify-between" style={{ background: "var(--acc-soft)", color: "var(--acc)", borderRadius: 4 }}>
                 <span className="font-medium">{activeTag}</span>
-                <button onClick={() => setActiveTag(null)} className="hover:opacity-80 p-0.5"><Icon name="x" size={12} /></button>
+                <button onClick={() => setActiveTag?.(null)} className="hover:opacity-80 p-0.5"><Icon name="x" size={12} /></button>
               </div>
             )}
             
-            {/* Render the folder tree root children */}
-            {tree.children?.map(child => 
+            {filteredTree.map((child: any) => 
               child.type === 'folder' ? (
-                <FolderNode key={child.path} {...child} activeId={activeId} onSelect={onSelect} onMoveNode={onMoveNode} depth={0} />
+                <FolderNode key={child.path} {...child} activeId={activeId} onSelect={onSelect} onMoveNode={onMoveNode} onDeleteFolder={onDeleteFolder} />
               ) : (
-                <NoteNode key={child.path} note={child.note!} activeId={activeId} onSelect={onSelect} depth={0} />
+                <NoteNode key={child.path} note={child.note!} activeId={activeId} onSelect={onSelect} />
               )
             )}
             
@@ -281,7 +323,7 @@ export const LeftSidebar = ({
                 key={tag} 
                 className="flex items-center justify-between px-2 py-1.5 rounded cursor-pointer hover:bg-[var(--bg-2)] transition-colors"
                 onClick={() => {
-                  setActiveTag(tag);
+                  setActiveTag?.(tag);
                   setTab("files");
                 }}
               >

@@ -48,6 +48,7 @@ function getDecorations(doc: ProsemirrorNode) {
       decorations.push(
         Decoration.inline(start, end, {
           class: 'pill-link cursor-pointer',
+          'data-id': match[1],
         })
       )
     }

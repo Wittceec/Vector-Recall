@@ -150,6 +150,13 @@ export default function AppShell() {
               }
             }}
             onDeleteNote={handleDeleteNote}
+            onDeleteFolder={(folderPath: string) => {
+              notes.forEach((n: any) => {
+                if (n.folder_path === folderPath || n.folder_path?.startsWith(folderPath + '/')) {
+                  deleteNote(n.id);
+                }
+              });
+            }}
             onMoveNode={(node: any, newPath: string) => {
               if (node.type === 'note') {
                 updateNote(node.id, { folder_path: newPath });
