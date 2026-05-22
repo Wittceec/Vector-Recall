@@ -48,12 +48,18 @@ const NoteNode = ({ note, activeId, onSelect, depth = 0 }: { note: Note, activeI
   );
 };
 
-const FolderNode = ({ name, path, children, activeId, onSelect, onMoveNode, onDeleteFolder, depth = 0, defaultExpanded = false, collapseTrigger = 0 }: any) => {
+const FolderNode = ({ name, path, children, activeId, activeNoteFolderPath, onSelect, onMoveNode, onDeleteFolder, depth = 0, defaultExpanded = false, collapseTrigger = 0 }: any) => {
   const [expanded, setExpanded] = React.useState(defaultExpanded);
   
   React.useEffect(() => {
     if (collapseTrigger > 0) setExpanded(false);
   }, [collapseTrigger]);
+
+  React.useEffect(() => {
+    if (activeNoteFolderPath && (activeNoteFolderPath === path || activeNoteFolderPath.startsWith(path + '/'))) {
+      setExpanded(true);
+    }
+  }, [activeNoteFolderPath, path]);
 
   return (
     <div>
@@ -119,7 +125,7 @@ const FolderNode = ({ name, path, children, activeId, onSelect, onMoveNode, onDe
         <div>
           {children.map((child: any) => 
             child.type === 'folder' ? (
-              <FolderNode key={child.path} {...child} activeId={activeId} onSelect={onSelect} onMoveNode={onMoveNode} onDeleteFolder={onDeleteFolder} depth={depth + 1} collapseTrigger={collapseTrigger} />
+              <FolderNode key={child.path} {...child} activeId={activeId} activeNoteFolderPath={activeNoteFolderPath} onSelect={onSelect} onMoveNode={onMoveNode} onDeleteFolder={onDeleteFolder} depth={depth + 1} collapseTrigger={collapseTrigger} />
             ) : (
               <NoteNode key={child.path} note={child.note} activeId={activeId} onSelect={onSelect} depth={depth + 1} />
             )
@@ -213,6 +219,12 @@ export const LeftSidebar = ({
 
   const tree = React.useMemo(() => buildTree(filteredNotes), [filteredNotes]);
   const filteredTree = tree.children || [];
+
+  const activeNoteFolderPath = React.useMemo(() => {
+    if (!activeId) return null;
+    const note = notes.find(n => n.id === activeId);
+    return note?.folder_path || null;
+  }, [activeId, notes]);
 
   const sortedTags = React.useMemo(() => {
     if (!tagCounts) return [];
@@ -316,7 +328,7 @@ export const LeftSidebar = ({
             
             {filteredTree.map((child: any) => 
               child.type === 'folder' ? (
-                <FolderNode key={child.path} {...child} activeId={activeId} onSelect={onSelect} onMoveNode={onMoveNode} onDeleteFolder={onDeleteFolder} collapseTrigger={collapseTrigger} />
+                <FolderNode key={child.path} {...child} activeId={activeId} activeNoteFolderPath={activeNoteFolderPath} onSelect={onSelect} onMoveNode={onMoveNode} onDeleteFolder={onDeleteFolder} collapseTrigger={collapseTrigger} />
               ) : (
                 <NoteNode key={child.path} note={child.note!} activeId={activeId} onSelect={onSelect} />
               )
