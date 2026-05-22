@@ -13,6 +13,8 @@ import { Wikilink, setWikilinkTitles } from "./editor/extensions/Wikilink"
 import { Hashtag, setHashtags } from "./editor/extensions/Hashtag"
 import { Icon } from "./Icons"
 
+import { WikilinkDecorator } from "./editor/extensions/WikilinkDecorator"
+
 // Configure lowlight for syntax highlighting
 const lowlight = createLowlight(common);
 
@@ -46,6 +48,7 @@ export function Editor({ initialContent, onUpdate, className = "", noteTitles = 
     extensions: [
       SlashCommand,
       Wikilink,
+      WikilinkDecorator,
       Hashtag,
       StarterKit.configure({
         heading: {
@@ -65,7 +68,7 @@ export function Editor({ initialContent, onUpdate, className = "", noteTitles = 
         defaultLanguage: 'plaintext',
       }),
       Markdown.configure({
-        html: false,
+        html: true,
         transformPastedText: true,
         transformCopiedText: true,
       }),

@@ -154,11 +154,12 @@ export default function AppShell() {
               if (node.type === 'note') {
                 updateNote(node.id, { folder_path: newPath });
               } else if (node.type === 'folder') {
+                const newBasePath = newPath ? `${newPath}/${node.name}` : node.name;
                 // Find all notes inside this folder and update their paths
                 notes.forEach((n: any) => {
                   if (n.folder_path === node.path || n.folder_path?.startsWith(node.path + '/')) {
                     const relativePath = n.folder_path.substring(node.path.length);
-                    const updatedPath = newPath ? `${newPath}${relativePath}` : relativePath.replace(/^\//, '');
+                    const updatedPath = relativePath ? `${newBasePath}${relativePath}` : newBasePath;
                     updateNote(n.id, { folder_path: updatedPath });
                   }
                 });
