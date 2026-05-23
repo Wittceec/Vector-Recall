@@ -48,17 +48,39 @@ export async function POST(req: Request) {
     const query_embedding = Array.from(output.data);
 
     // Perform vector similarity search using our match_notes RPC
-    const { data: notes, error } = await supabase.rpc('match_notes', {
+    const { data: vectorNotes, error: vectorError } = await supabase.rpc('match_notes', {
       query_embedding,
       match_threshold: 0.30, // significantly lower threshold for better recall
       match_count: 20,       // Top 20 results
       p_user_id: userId
     });
 
-    if (error) {
-      console.error('RPC Error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (vectorError) {
+      console.error('RPC Error:', vectorError);
+      return NextResponse.json({ error: vectorError.message }, { status: 500 });
     }
+
+    // Perform basic keyword search as fallback for short/exact queries
+    const { data: keywordNotes, error: keywordError } = await supabase
+      .from('notes')
+      .select('id, title, content_markdown')
+      .eq('user_id', userId)
+      .or(`title.ilike.%${query}%,content_markdown.ilike.%${query}%`)
+      .limit(10);
+
+    if (keywordError) {
+      console.error('Keyword Search Error:', keywordError);
+    }
+
+    // Combine and deduplicate
+    const allNotes = [...(vectorNotes || []), ...(keywordNotes || [])];
+    const uniqueNotesMap = new Map();
+    for (const n of allNotes) {
+      if (!uniqueNotesMap.has(n.id)) {
+        uniqueNotesMap.set(n.id, n);
+      }
+    }
+    const notes = Array.from(uniqueNotesMap.values());
 
     return NextResponse.json({ results: notes || [] });
   } catch (error: any) {
