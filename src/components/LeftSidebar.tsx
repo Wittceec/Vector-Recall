@@ -174,7 +174,7 @@ const buildTree = (notes: Note[]) => {
     if (node.children) {
       node.children.sort((a, b) => {
         if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
-        return a.name.localeCompare(b.name);
+        return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
       });
       node.children.forEach(sortTree);
     }
