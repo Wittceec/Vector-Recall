@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { pipeline, env } from '@xenova/transformers';
+
+export const runtime = 'edge';
 import { createClient } from '@supabase/supabase-js';
 
 env.allowLocalModels = false;

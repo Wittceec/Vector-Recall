@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { pipeline, env } from '@xenova/transformers';
 
+export const runtime = 'edge';
+
 // Skip local model checks and use the HuggingFace Hub directly
 env.allowLocalModels = false;
 env.useBrowserCache = false;

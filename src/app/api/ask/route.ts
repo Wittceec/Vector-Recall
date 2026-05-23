@@ -4,6 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import { streamText } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 
+export const runtime = 'edge';
+
 env.allowLocalModels = false;
 env.useBrowserCache = false;
 env.cacheDir = '/tmp';
