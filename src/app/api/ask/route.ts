@@ -94,14 +94,15 @@ export async function POST(req: Request) {
     }).join("\n\n---\n\n");
 
     const systemPrompt = `You are Vector Recall, an intelligent assistant for a user's personal "Second Brain" note-taking app.
-The user is asking a question. You have retrieved the following relevant notes from their vault:
+The user's query is provided below. You have retrieved the following relevant notes from their vault:
 
 ${contextText}
 
 Instructions:
-1. Answer the user's question clearly and concisely based ONLY on the provided notes.
-2. If the answer cannot be found in the notes, say "I couldn't find an answer to that in your vault." Do NOT invent information.
-3. Keep formatting clean.`;
+1. If the user asks a specific question, answer it clearly and concisely based ONLY on the provided notes.
+2. If the user just types a short keyword or topic (like "entra" or "react"), provide a helpful summary of what their notes say about that topic.
+3. If the provided notes do not contain information relevant to the user's query, say "I couldn't find an answer to that in your vault." Do NOT invent information or hallucinate facts outside the provided notes.
+4. Keep formatting clean and readable.`;
 
     // Stream text using Gemini 2.5 Flash
     const result = streamText({
