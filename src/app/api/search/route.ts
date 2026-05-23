@@ -50,8 +50,8 @@ export async function POST(req: Request) {
     // Perform vector similarity search using our match_notes RPC
     const { data: notes, error } = await supabase.rpc('match_notes', {
       query_embedding,
-      match_threshold: 0.70, // 70% similarity threshold
-      match_count: 5,        // Top 5 results
+      match_threshold: 0.30, // significantly lower threshold for better recall
+      match_count: 20,       // Top 20 results
       p_user_id: userId
     });
 
