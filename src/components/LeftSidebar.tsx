@@ -266,14 +266,17 @@ export const LeftSidebar = ({
             <button 
               onClick={() => {
                 const name = window.prompt("Folder name:");
-                if (name) onCreateNote('.keep', name);
+                if (name) {
+                  const newPath = activeNoteFolderPath ? `${activeNoteFolderPath}/${name}` : name;
+                  onCreateNote('.keep', newPath);
+                }
               }} 
               className="p-1 rounded hover:bg-[var(--bg-3)] text-[var(--fg-2)]" 
               title="New folder"
             >
               <Icon name="folder" size={13} />
             </button>
-            <button onClick={() => onCreateNote()} className="p-1 rounded hover:bg-[var(--bg-3)] text-[var(--fg-2)]" title="New note"><Icon name="plus" size={13} /></button>
+            <button onClick={() => onCreateNote(undefined, activeNoteFolderPath || undefined)} className="p-1 rounded hover:bg-[var(--bg-3)] text-[var(--fg-2)]" title="New note"><Icon name="plus" size={13} /></button>
             <NoteMenu 
               onDelete={() => activeId && onDeleteNote?.(activeId)}
               onRename={() => {

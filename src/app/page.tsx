@@ -142,7 +142,10 @@ export default function AppShell() {
             activeId={activeNoteId} 
             onSelect={setActiveNoteId}
             onCreateNote={async (title?: string, folder_path?: string) => {
-              const initialData = title === '.keep' && folder_path ? { title: '.keep', folder_path } : {};
+              const initialData: any = {};
+              if (title) initialData.title = title;
+              if (folder_path) initialData.folder_path = folder_path;
+              
               const newNote = await createNote(initialData);
               if (newNote) {
                 if (newNote.title !== '.keep') setActiveNoteId(newNote.id);
