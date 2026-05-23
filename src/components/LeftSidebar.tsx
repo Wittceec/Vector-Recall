@@ -59,7 +59,7 @@ const FolderNode = ({ name, path, children, activeId, activeNoteFolderPath, onSe
     if (activeNoteFolderPath && (activeNoteFolderPath === path || activeNoteFolderPath.startsWith(path + '/'))) {
       setExpanded(true);
     }
-  }, [activeNoteFolderPath, path]);
+  }, [activeNoteFolderPath, path, activeId]);
 
   return (
     <div>

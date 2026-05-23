@@ -81,9 +81,9 @@ Instructions:
 2. If the answer cannot be found in the notes, say "I couldn't find an answer to that in your vault." Do NOT invent information.
 3. Keep formatting clean.`;
 
-    // Stream text using Gemini 1.5 Flash
+    // Stream text using Gemini 2.5 Flash
     const result = streamText({
-      model: google('gemini-1.5-flash'),
+      model: google('gemini-2.5-flash'),
       system: systemPrompt,
       prompt: prompt,
     });
