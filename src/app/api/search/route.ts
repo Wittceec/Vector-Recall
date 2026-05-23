@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server';
 import { pipeline, env } from '@xenova/transformers';
 
-export const runtime = 'edge';
 import { createClient } from '@supabase/supabase-js';
 
 env.allowLocalModels = false;
 env.useBrowserCache = false;
 env.cacheDir = '/tmp';
-env.backends.onnx.wasm.numThreads = 1;
-env.backends.onnx.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/';
 
 // Create a direct Supabase client using service role for the API
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
