@@ -7,6 +7,7 @@ export const runtime = 'edge';
 env.allowLocalModels = false;
 env.useBrowserCache = false;
 env.cacheDir = '/tmp';
+env.backends.onnx.wasm.numThreads = 1;
 
 // We use a singleton pattern to ensure the model is only loaded once
 class EmbedderPipeline {

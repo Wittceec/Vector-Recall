@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 env.allowLocalModels = false;
 env.useBrowserCache = false;
 env.cacheDir = '/tmp';
+env.backends.onnx.wasm.numThreads = 1;
 
 // Create a direct Supabase client using service role for the API
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';

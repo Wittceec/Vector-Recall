@@ -9,6 +9,7 @@ export const runtime = 'edge';
 env.allowLocalModels = false;
 env.useBrowserCache = false;
 env.cacheDir = '/tmp';
+env.backends.onnx.wasm.numThreads = 1;
 
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
