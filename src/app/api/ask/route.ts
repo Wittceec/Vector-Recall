@@ -10,6 +10,7 @@ env.allowLocalModels = false;
 env.useBrowserCache = false;
 env.cacheDir = '/tmp';
 env.backends.onnx.wasm.numThreads = 1;
+env.backends.onnx.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/';
 
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
