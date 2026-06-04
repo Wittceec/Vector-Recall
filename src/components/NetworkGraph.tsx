@@ -7,21 +7,23 @@ const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false 
 
 export function NetworkGraph({ 
   graphData, 
-  onNodeClick 
+  onNodeClick,
+  activeNoteId
 }: { 
   graphData: { nodes: any[], links: any[] },
-  onNodeClick: (node: any) => void 
+  onNodeClick: (node: any) => void,
+  activeNoteId?: string
 }) {
   const fgRef = React.useRef<any>(null);
 
   React.useEffect(() => {
-    // Zoom to fit after data loads
+    // Zoom to fit only when switching to a new active note
     if (fgRef.current && graphData.nodes.length > 0) {
       setTimeout(() => {
-        fgRef.current.zoomToFit(400, 20);
+        fgRef.current?.zoomToFit(400, 20);
       }, 500);
     }
-  }, [graphData]);
+  }, [activeNoteId]); // Do NOT depend on graphData here, otherwise it spasms on every keystroke!
 
   return (
     <ForceGraph2D

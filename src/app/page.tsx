@@ -10,6 +10,7 @@ import { useNotes } from "@/hooks/useNotes"
 import { CommandPalette } from "@/components/CommandPalette"
 import { SettingsDialog } from "@/components/SettingsDialog"
 import { HistoryDialog } from "@/components/HistoryDialog"
+import { HelpDialog } from "@/components/HelpDialog"
 import { extractTags } from "@/utils/markdownParser"
 
 export default function AppShell() {
@@ -45,6 +46,7 @@ export default function AppShell() {
   const [cmdOpen, setCmdOpen] = React.useState(false);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [historyOpen, setHistoryOpen] = React.useState(false);
+  const [helpOpen, setHelpOpen] = React.useState(false);
 
   // Auto-select first note if none is selected
   React.useEffect(() => {
@@ -191,9 +193,19 @@ export default function AppShell() {
             onToggleLeft={toggleLeft} 
             onToggleRight={toggleRight} 
             onOpenCmdK={() => setCmdOpen(true)}
-            onOpenAsk={() => setCmdOpen(true)}
+            onOpenAsk={() => {
+              setCmdOpen(true);
+              setTimeout(() => {
+                const input = document.querySelector('input[placeholder*="Search vault"]');
+                if (input) {
+                  (input as HTMLInputElement).value = "? ";
+                  input.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+              }, 50);
+            }}
             onOpenSettings={() => setSettingsOpen(true)}
             onOpenHistory={() => setHistoryOpen(true)}
+            onOpenHelp={() => setHelpOpen(true)}
             breadcrumb={["Vault", activeNote?.title || "Untitled Note"]} 
             isSaving={isSaving}
           />
@@ -261,6 +273,11 @@ export default function AppShell() {
         </Panel>
 
       </PanelGroup>
+
+      <CommandPalette open={cmdOpen} setOpen={setCmdOpen} notes={notes} onSelectNote={setActiveNoteId} />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <HistoryDialog open={historyOpen} onOpenChange={setHistoryOpen} noteId={activeNoteId} onRestore={(content, title) => updateNote(activeNoteId!, { content_markdown: content, title })} />
+      <HelpDialog open={helpOpen} setOpen={setHelpOpen} />
     </div>
   )
 }

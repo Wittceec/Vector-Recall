@@ -29,6 +29,8 @@ export const Icon = ({ name, size = 14, className = "", strokeWidth = 1.6 }: { n
     case "x":          return <svg {...c}><path d="M18 6 6 18M6 6l12 12"/></svg>;
     case "undo":       return <svg {...c}><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>;
     case "redo":       return <svg {...c}><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>;
+    case "help":       return <svg {...c}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
+    case "chevrons-up":return <svg {...c}><path d="m17 11-5-5-5 5"/><path d="m17 18-5-5-5 5"/></svg>;
     default: return null;
   }
 }

@@ -136,7 +136,8 @@ export const RightSidebar = ({ notes = [], activeId = null, onLinkClick = () => 
           <div className="relative rounded-lg overflow-hidden flex items-center justify-center text-[var(--fg-2)]" style={{ background: "radial-gradient(circle at 50% 50%, #0c1117, #07090c)", border: "1px solid var(--bd-1)", height: 220 }}>
             <NetworkGraph 
               graphData={graphData} 
-              onNodeClick={(node) => onLinkClick(node.id)} 
+              activeNoteId={activeNote?.id}
+              onNodeClick={(node: any) => onLinkClick(node.id)} 
             />
           </div>
           <div>
