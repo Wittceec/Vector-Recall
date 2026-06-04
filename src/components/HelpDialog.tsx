@@ -60,6 +60,41 @@ export function HelpDialog({ open, setOpen }: { open: boolean, setOpen: (open: b
             </div>
           </div>
 
+          <h3 className="font-semibold text-[var(--acc)] mb-3 text-[13px] tracking-wider uppercase">Markdown Formatting</h3>
+          <div className="bg-[var(--bg-2)] p-4 rounded border border-[var(--bd-1)] mb-8 text-[13.5px]">
+            <p className="mb-4 text-[var(--fg-2)]">Your editor supports full Markdown syntax for text formatting!</p>
+            <div className="grid grid-cols-2 gap-y-3 gap-x-6">
+              <div className="flex justify-between items-center border-b border-[var(--bd-1)] pb-2">
+                <span className="font-bold">Bold Text</span>
+                <code className="text-[12px] bg-[var(--bg-3)] px-1.5 py-0.5 rounded">**bold**</code>
+              </div>
+              <div className="flex justify-between items-center border-b border-[var(--bd-1)] pb-2">
+                <span className="italic">Italic Text</span>
+                <code className="text-[12px] bg-[var(--bg-3)] px-1.5 py-0.5 rounded">*italic*</code>
+              </div>
+              <div className="flex justify-between items-center border-b border-[var(--bd-1)] pb-2">
+                <span className="text-[15px] font-bold">Heading 1</span>
+                <code className="text-[12px] bg-[var(--bg-3)] px-1.5 py-0.5 rounded"># Heading</code>
+              </div>
+              <div className="flex justify-between items-center border-b border-[var(--bd-1)] pb-2">
+                <span className="text-[14px] font-bold">Heading 2</span>
+                <code className="text-[12px] bg-[var(--bg-3)] px-1.5 py-0.5 rounded">## Heading</code>
+              </div>
+              <div className="flex justify-between items-center border-b border-[var(--bd-1)] pb-2">
+                <span className="text-[#a5d6ff] bg-[#0d1117] px-1 rounded inline-block">Inline Code</span>
+                <code className="text-[12px] bg-[var(--bg-3)] px-1.5 py-0.5 rounded">`code`</code>
+              </div>
+              <div className="flex justify-between items-center border-b border-[var(--bd-1)] pb-2">
+                <span className="text-[var(--fg-2)] border-l-2 border-[var(--acc)] pl-2 italic">Blockquote</span>
+                <code className="text-[12px] bg-[var(--bg-3)] px-1.5 py-0.5 rounded">{'> quote'}</code>
+              </div>
+              <div className="flex justify-between items-center col-span-2 pt-1">
+                <span className="text-[#a5d6ff] bg-[#0d1117] p-2 rounded block w-24 text-center">Code Block</span>
+                <code className="text-[12px] bg-[var(--bg-3)] px-1.5 py-0.5 rounded">```bash<br/>echo "hello"<br/>```</code>
+              </div>
+            </div>
+          </div>
+
           <h3 className="font-semibold text-[var(--acc)] mb-3 text-[13px] tracking-wider uppercase">Pro Tips</h3>
           <ul className="list-disc pl-5 space-y-2 text-[13.5px] text-[var(--fg-2)]">
             <li><strong className="text-[var(--fg-1)]">Semantic Search:</strong> The search bar doesn't just look for exact words. It uses an AI embedding model to find notes based on the <em>meaning</em> of your query.</li>
