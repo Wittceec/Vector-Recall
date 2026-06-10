@@ -77,7 +77,7 @@ export function Editor({ initialContent, onUpdate, className = "", noteTitles = 
     editable,
     editorProps: {
       attributes: {
-        class: `prose-vc focus:outline-none min-h-[500px] w-full max-w-none ${className}`,
+        class: `prose-vc focus:outline-none min-h-[500px] w-full max-w-none pb-[40vh] ${className}`,
       },
     },
     onUpdate: ({ editor }) => {
