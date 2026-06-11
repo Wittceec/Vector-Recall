@@ -6,6 +6,7 @@ import { LeftSidebar } from "@/components/LeftSidebar"
 import { RightSidebar } from "@/components/RightSidebar"
 import { Editor } from "@/components/Editor"
 import { useNotes } from "@/hooks/useNotes"
+import { useTimeLogs } from "@/hooks/useTimeLogs"
 
 import { CommandPalette } from "@/components/CommandPalette"
 import { SettingsDialog } from "@/components/SettingsDialog"
@@ -21,6 +22,7 @@ export default function AppShell() {
   const rightPanelRef = React.useRef<any>(null);
 
   const { notes, loading, isSaving, createNote, updateNote, deleteNote, refreshNotes } = useNotes();
+  const { saveLog, logs } = useTimeLogs();
   const [activeNoteId, setActiveNoteId] = React.useState<string | null>(null);
   const [activeTag, setActiveTag] = React.useState<string | null>(null);
 
@@ -193,6 +195,7 @@ export default function AppShell() {
             onToggleLeft={toggleLeft} 
             onToggleRight={toggleRight} 
             onOpenCmdK={() => setCmdOpen(true)}
+            onSaveLog={saveLog}
             onOpenAsk={() => {
               setCmdOpen(true);
               setTimeout(() => {
@@ -263,12 +266,13 @@ export default function AppShell() {
           className="relative transition-all duration-300 ease-in-out"
         >
           <RightSidebar 
-            notes={notes}
-            activeId={activeNoteId}
-            onLinkClick={setActiveNoteId}
+            notes={notes} 
+            activeId={activeNoteId} 
+            onLinkClick={setActiveNoteId} 
             onUpdateNote={updateNote}
             collapsed={rightCollapsed} 
-            onToggle={toggleRight} 
+            onToggle={toggleRight}
+            logs={logs}
           />
         </Panel>
 

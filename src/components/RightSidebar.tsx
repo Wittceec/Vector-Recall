@@ -5,6 +5,8 @@ import { Note } from "@/hooks/useNotes"
 import { extractTags, extractWikilinks, extractHeadings, getStats, getContextSnippet } from "@/utils/markdownParser"
 import { NetworkGraph } from "./NetworkGraph"
 
+import { ProgressCalendar } from "./ProgressCalendar"
+
 const Outline = ({ headings }: { headings: any[] }) => {
   return (
     <div className="space-y-1 mono text-[12px]">
@@ -19,7 +21,7 @@ const Outline = ({ headings }: { headings: any[] }) => {
   );
 };
 
-export const RightSidebar = ({ notes = [], activeId = null, onLinkClick = () => {}, onUpdateNote = () => {}, collapsed = false, onToggle }: any) => {
+export const RightSidebar = ({ notes = [], activeId = null, onLinkClick = () => {}, onUpdateNote = () => {}, collapsed = false, onToggle, logs = [] }: any) => {
   const [tab, setTab] = React.useState("graph");
 
   const activeNote = React.useMemo(() => notes.find((n: Note) => n.id === activeId), [notes, activeId]);
@@ -90,6 +92,7 @@ export const RightSidebar = ({ notes = [], activeId = null, onLinkClick = () => 
         <button onClick={() => setTab("graph")} className="p-2 rounded-md hover:bg-[var(--bg-3)] text-[var(--fg-2)]"><Icon name="graph" size={16} /></button>
         <button onClick={() => setTab("links")} className="p-2 rounded-md hover:bg-[var(--bg-3)] text-[var(--fg-2)]"><Icon name="link" size={16} /></button>
         <button onClick={() => setTab("outline")} className="p-2 rounded-md hover:bg-[var(--bg-3)] text-[var(--fg-2)]"><Icon name="circle-dot" size={16} /></button>
+        <button onClick={() => setTab("progress")} className="p-2 rounded-md hover:bg-[var(--bg-3)] text-[var(--fg-2)]"><Icon name="sparkles" size={16} /></button>
       </aside>
     );
   }
@@ -125,10 +128,11 @@ export const RightSidebar = ({ notes = [], activeId = null, onLinkClick = () => 
         </div>
       )}
 
-      <div className="flex shrink-0" style={{ borderBottom: "1px solid var(--bd-1)" }}>
-        <div className={"rs-tab " + (tab === "graph" ? "active" : "")} onClick={() => setTab("graph")}>Graph</div>
-        <div className={"rs-tab " + (tab === "links" ? "active" : "")} onClick={() => setTab("links")}>Links <span style={{ color: "var(--fg-3)" }}>· {linkedMentions.length}/{unlinkedMentions.length}</span></div>
-        <div className={"rs-tab " + (tab === "outline" ? "active" : "")} onClick={() => setTab("outline")}>Outline</div>
+      <div className="flex shrink-0 overflow-x-auto scrollbar-none" style={{ borderBottom: "1px solid var(--bd-1)" }}>
+        <div className={"rs-tab whitespace-nowrap " + (tab === "graph" ? "active" : "")} onClick={() => setTab("graph")}>Graph</div>
+        <div className={"rs-tab whitespace-nowrap " + (tab === "links" ? "active" : "")} onClick={() => setTab("links")}>Links <span style={{ color: "var(--fg-3)" }}>· {linkedMentions.length}/{unlinkedMentions.length}</span></div>
+        <div className={"rs-tab whitespace-nowrap " + (tab === "outline" ? "active" : "")} onClick={() => setTab("outline")}>Outline</div>
+        <div className={"rs-tab whitespace-nowrap " + (tab === "progress" ? "active" : "")} onClick={() => setTab("progress")}>Progress</div>
       </div>
 
       {tab === "graph" && (
@@ -212,6 +216,12 @@ export const RightSidebar = ({ notes = [], activeId = null, onLinkClick = () => 
           <div className="mono text-[12px]" style={{ color: "var(--fg-1)" }}>
             {stats.words} words · {stats.chars} chars
           </div>
+        </div>
+      )}
+
+      {tab === "progress" && (
+        <div className="px-4 py-4">
+          <ProgressCalendar logs={logs} />
         </div>
       )}
     </aside>

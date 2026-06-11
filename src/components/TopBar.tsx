@@ -1,8 +1,9 @@
 import * as React from "react"
 import { Icon, VectorMark } from "./Icons"
 import { UserMenu } from "./UserMenu"
+import { TopBarTimer } from "./TopBarTimer"
 
-export const TopBar = ({ onToggleLeft, onToggleRight, onOpenCmdK, onOpenAsk, onOpenSettings, onOpenHistory, onOpenHelp, breadcrumb = ["Vault", "recall"], isSaving }: { onToggleLeft?: () => void, onToggleRight?: () => void, onOpenCmdK?: () => void, onOpenAsk?: () => void, onOpenSettings?: () => void, onOpenHistory?: () => void, onOpenHelp?: () => void, breadcrumb?: string[], isSaving?: boolean }) => (
+export const TopBar = ({ onToggleLeft, onToggleRight, onOpenCmdK, onOpenAsk, onOpenSettings, onOpenHistory, onOpenHelp, onSaveLog, breadcrumb = ["Vault", "recall"], isSaving }: { onToggleLeft?: () => void, onToggleRight?: () => void, onOpenCmdK?: () => void, onOpenAsk?: () => void, onOpenSettings?: () => void, onOpenHistory?: () => void, onOpenHelp?: () => void, onSaveLog?: (topic: string, color: string, duration: number) => void, breadcrumb?: string[], isSaving?: boolean }) => (
   <header className="topbar flex items-center px-3 gap-3 relative z-20 shrink-0">
     <div className="flex items-center gap-2 pr-3" style={{ borderRight: "1px solid var(--bd-1)", height: "100%" }}>
       <VectorMark size={22} />
@@ -35,6 +36,8 @@ export const TopBar = ({ onToggleLeft, onToggleRight, onOpenCmdK, onOpenAsk, onO
     </div>
 
     <div className="ml-auto flex items-center gap-2">
+      <TopBarTimer onSaveLog={onSaveLog || (() => {})} />
+
       <button onClick={onOpenAsk} className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[12.5px]" style={{ background: "var(--acc-soft)", border: "1px solid oklch(0.78 0.13 195 / 0.45)", color: "var(--acc)" }}>
         <Icon name="sparkles" size={13} />
         <span className="font-medium">Ask Vector</span>
