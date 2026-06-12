@@ -21,7 +21,7 @@ const Outline = ({ headings }: { headings: any[] }) => {
   );
 };
 
-export const RightSidebar = ({ notes = [], activeId = null, onLinkClick = () => {}, onUpdateNote = () => {}, collapsed = false, onToggle, logs = [] }: any) => {
+export const RightSidebar = ({ notes = [], activeId = null, onLinkClick = () => {}, onUpdateNote = () => {}, collapsed = false, onToggle, logs = [], onQuizOpen = () => {} }: any) => {
   const [tab, setTab] = React.useState("graph");
 
   const activeNote = React.useMemo(() => notes.find((n: Note) => n.id === activeId), [notes, activeId]);
@@ -125,6 +125,18 @@ export const RightSidebar = ({ notes = [], activeId = null, onLinkClick = () => 
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {activeNote && (
+        <div className="px-4 py-2 shrink-0" style={{ borderBottom: "1px solid var(--bd-1)" }}>
+          <button 
+            onClick={onQuizOpen}
+            className="w-full flex items-center justify-center gap-2 py-1.5 rounded-md text-[12px] font-medium transition-colors hover:bg-[var(--acc-soft)] text-[var(--acc)] border border-transparent hover:border-[var(--acc)]"
+          >
+            <Icon name="sparkles" size={14} />
+            Quiz Me on Note
+          </button>
         </div>
       )}
 

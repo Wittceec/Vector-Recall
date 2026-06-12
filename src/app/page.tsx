@@ -12,6 +12,7 @@ import { CommandPalette } from "@/components/CommandPalette"
 import { SettingsDialog } from "@/components/SettingsDialog"
 import { HistoryDialog } from "@/components/HistoryDialog"
 import { HelpDialog } from "@/components/HelpDialog"
+import { QuizDialog } from "@/components/QuizDialog"
 import { extractTags } from "@/utils/markdownParser"
 
 export default function AppShell() {
@@ -49,6 +50,7 @@ export default function AppShell() {
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [historyOpen, setHistoryOpen] = React.useState(false);
   const [helpOpen, setHelpOpen] = React.useState(false);
+  const [quizOpen, setQuizOpen] = React.useState(false);
 
   // Auto-select first note if none is selected
   React.useEffect(() => {
@@ -273,6 +275,7 @@ export default function AppShell() {
             collapsed={rightCollapsed} 
             onToggle={toggleRight}
             logs={logs}
+            onQuizOpen={() => setQuizOpen(true)}
           />
         </Panel>
 
@@ -282,6 +285,7 @@ export default function AppShell() {
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       <HistoryDialog open={historyOpen} onOpenChange={setHistoryOpen} noteId={activeNoteId} onRestore={(content, title) => updateNote(activeNoteId!, { content_markdown: content, title })} />
       <HelpDialog open={helpOpen} setOpen={setHelpOpen} />
+      <QuizDialog open={quizOpen} onOpenChange={setQuizOpen} content={activeNote?.content_markdown || ""} title={activeNote?.title || ""} />
     </div>
   )
 }
