@@ -1,8 +1,11 @@
 "use client"
 import * as React from "react"
 import { TimeLog } from "@/hooks/useTimeLogs"
+import { Icon } from "./Icons"
 
 export function ProgressCalendar({ logs }: { logs: TimeLog[] }) {
+  const [currentDate, setCurrentDate] = React.useState(new Date())
+
   // Aggregate logs by date
   const logsByDate = React.useMemo(() => {
     const acc: Record<string, { duration: number, topics: Record<string, string> }> = {};
@@ -27,44 +30,10 @@ export function ProgressCalendar({ logs }: { logs: TimeLog[] }) {
         acc[log.topic] = { duration: 0, color: log.color };
       }
       acc[log.topic].duration += log.duration_seconds;
-      // prioritize the latest color if it changed
       acc[log.topic].color = log.color;
     });
     return Object.entries(acc).sort((a, b) => b[1].duration - a[1].duration);
   }, [logs]);
-
-  // Generate 7 rows x 20 cols of dates for heatmap
-  const heatmapData = React.useMemo(() => {
-    const data = [];
-    const today = new Date();
-    // Start 140 days ago (20 weeks)
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() - 139);
-    
-    // adjust to nearest sunday
-    while (startDate.getDay() !== 0) {
-      startDate.setDate(startDate.getDate() - 1);
-    }
-
-    for (let i = 0; i < 140; i++) {
-      const d = new Date(startDate);
-      d.setDate(startDate.getDate() + i);
-      const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-      const dayData = logsByDate[dateStr];
-      data.push({
-        date: dateStr,
-        duration: dayData?.duration || 0,
-        mainColor: dayData && Object.keys(dayData.topics).length > 0 ? Object.values(dayData.topics)[0] : 'var(--bg-3)'
-      });
-    }
-    
-    // Split into 7 rows (days of week)
-    const columns: any[][] = [];
-    for (let w = 0; w < 20; w++) {
-      columns.push(data.slice(w * 7, (w + 1) * 7));
-    }
-    return columns;
-  }, [logsByDate]);
 
   const formatHours = (secs: number) => {
     const h = Math.floor(secs / 3600);
@@ -72,6 +41,47 @@ export function ProgressCalendar({ logs }: { logs: TimeLog[] }) {
     if (h > 0) return `${h}h ${m}m`;
     return `${m}m`;
   }
+  
+  const formatCompact = (secs: number) => {
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    if (h > 0 && m > 0) return `${h}h${m}m`;
+    if (h > 0) return `${h}h`;
+    return `${m}m`;
+  }
+
+  // Generate calendar grid for current month
+  const calendarDays = React.useMemo(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    
+    const days = [];
+    
+    // Padding days before the 1st
+    for (let i = 0; i < firstDay.getDay(); i++) {
+      days.push(null);
+    }
+    
+    // Actual days
+    for (let i = 1; i <= lastDay.getDate(); i++) {
+      const d = new Date(year, month, i);
+      const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      days.push({
+        date: dateStr,
+        dayNum: i,
+        data: logsByDate[dateStr] || null
+      });
+    }
+    return days;
+  }, [currentDate, logsByDate]);
+
+  const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
   return (
     <div className="space-y-6">
@@ -80,28 +90,45 @@ export function ProgressCalendar({ logs }: { logs: TimeLog[] }) {
         <p className="text-[11px] text-[var(--fg-3)]">Total time logged: <span className="text-[var(--fg-0)] font-medium">{formatHours(totalTime)}</span></p>
       </div>
 
-      <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-none">
-        {heatmapData.map((col, cIdx) => (
-          <div key={cIdx} className="flex flex-col gap-1">
-            {col.map((day, rIdx) => {
-              // Calculate opacity based on duration (max ~4 hours)
-              const maxDuration = 14400; 
-              const intensity = day.duration === 0 ? 0 : Math.max(0.2, Math.min(1, day.duration / maxDuration));
-              
-              return (
-                <div 
-                  key={rIdx} 
-                  title={`${day.date}: ${formatHours(day.duration)}`}
-                  className="w-3 h-3 rounded-[2px]"
-                  style={{
-                    backgroundColor: day.duration > 0 ? day.mainColor : 'var(--bg-2)',
-                    opacity: day.duration > 0 ? intensity : 1
-                  }}
-                />
-              )
-            })}
+      <div className="bg-[var(--bg-2)] rounded-lg border border-[var(--bd-1)] p-3">
+        <div className="flex items-center justify-between mb-4">
+          <button onClick={prevMonth} className="p-1 hover:bg-[var(--bg-3)] rounded text-[var(--fg-2)]"><Icon name="chev-left" size={14} /></button>
+          <div className="text-[13px] font-medium text-[var(--fg-1)]">
+            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
           </div>
-        ))}
+          <button onClick={nextMonth} className="p-1 hover:bg-[var(--bg-3)] rounded text-[var(--fg-2)]"><Icon name="chev-right" size={14} /></button>
+        </div>
+        
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+            <div key={i} className="text-center text-[10px] font-semibold text-[var(--fg-3)]">{d}</div>
+          ))}
+        </div>
+        
+        <div className="grid grid-cols-7 gap-1">
+          {calendarDays.map((day, i) => {
+            if (!day) return <div key={`empty-${i}`} className="aspect-square" />;
+            
+            const hasData = day.data && day.data.duration > 0;
+            const mainColor = hasData ? Object.values(day.data.topics)[0] : 'var(--bg-3)';
+            
+            return (
+              <div 
+                key={i} 
+                className={`relative aspect-square rounded-[4px] border border-[var(--bd-1)] flex flex-col items-center justify-center overflow-hidden transition-all ${hasData ? 'bg-[var(--bg-3)]' : 'bg-[var(--bg-1)] opacity-70'}`}
+                title={hasData ? `${day.date}: ${formatHours(day.data.duration)}` : day.date}
+              >
+                <span className={`text-[10px] font-medium z-10 ${hasData ? 'text-[var(--fg-0)] mt-[-4px]' : 'text-[var(--fg-3)]'}`}>{day.dayNum}</span>
+                {hasData && (
+                  <>
+                    <span className="text-[9px] font-bold z-10" style={{ color: mainColor }}>{formatCompact(day.data.duration)}</span>
+                    <div className="absolute bottom-0 left-0 w-full h-[3px] opacity-80" style={{ backgroundColor: mainColor }} />
+                  </>
+                )}
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       <div className="pt-2 border-t border-[var(--bd-1)] space-y-3">
