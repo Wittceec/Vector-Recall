@@ -48,7 +48,7 @@ const NoteNode = ({ note, activeId, onSelect, depth = 0 }: { note: Note, activeI
   );
 };
 
-const FolderNode = ({ name, path, children, activeId, activeNoteFolderPath, onSelect, onMoveNode, onDeleteFolder, depth = 0, defaultExpanded = false, collapseTrigger = 0 }: any) => {
+const FolderNode = ({ name, path, children, activeId, activeNoteFolderPath, onSelect, onMoveNode, onDeleteFolder, onCreateNote, depth = 0, defaultExpanded = false, collapseTrigger = 0 }: any) => {
   const [expanded, setExpanded] = React.useState(defaultExpanded);
   
   React.useEffect(() => {
@@ -95,6 +95,23 @@ const FolderNode = ({ name, path, children, activeId, activeNoteFolderPath, onSe
         <span className="truncate font-medium flex-1">{name}</span>
         <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1.5 pr-1" onClick={e => e.stopPropagation()}>
           <button 
+            title="New note in folder" 
+            className="hover:text-[var(--acc)] transition-colors"
+            onClick={() => { setExpanded(true); onCreateNote?.(undefined, path); }}
+          >
+            <Icon name="plus" size={11} />
+          </button>
+          <button 
+            title="New sub-folder" 
+            className="hover:text-[var(--acc)] transition-colors"
+            onClick={() => { 
+              const newName = window.prompt("New folder name:");
+              if (newName) { setExpanded(true); onCreateNote?.('.keep', `${path}/${newName}`); }
+            }}
+          >
+            <Icon name="folder" size={11} />
+          </button>
+          <button 
             title="Rename folder" 
             className="hover:text-[var(--acc)] transition-colors"
             onClick={() => {
@@ -125,7 +142,7 @@ const FolderNode = ({ name, path, children, activeId, activeNoteFolderPath, onSe
         <div>
           {children.map((child: any) => 
             child.type === 'folder' ? (
-              <FolderNode key={child.path} {...child} activeId={activeId} activeNoteFolderPath={activeNoteFolderPath} onSelect={onSelect} onMoveNode={onMoveNode} onDeleteFolder={onDeleteFolder} depth={depth + 1} collapseTrigger={collapseTrigger} />
+              <FolderNode key={child.path} {...child} activeId={activeId} activeNoteFolderPath={activeNoteFolderPath} onSelect={onSelect} onMoveNode={onMoveNode} onDeleteFolder={onDeleteFolder} onCreateNote={onCreateNote} depth={depth + 1} collapseTrigger={collapseTrigger} />
             ) : (
               <NoteNode key={child.path} note={child.note} activeId={activeId} onSelect={onSelect} depth={depth + 1} />
             )
@@ -267,16 +284,15 @@ export const LeftSidebar = ({
               onClick={() => {
                 const name = window.prompt("Folder name:");
                 if (name) {
-                  const newPath = activeNoteFolderPath ? `${activeNoteFolderPath}/${name}` : name;
-                  onCreateNote('.keep', newPath);
+                  onCreateNote('.keep', name);
                 }
               }} 
               className="p-1 rounded hover:bg-[var(--bg-3)] text-[var(--fg-2)]" 
-              title="New folder"
+              title="New folder at root"
             >
               <Icon name="folder" size={13} />
             </button>
-            <button onClick={() => onCreateNote(undefined, activeNoteFolderPath || undefined)} className="p-1 rounded hover:bg-[var(--bg-3)] text-[var(--fg-2)]" title="New note"><Icon name="plus" size={13} /></button>
+            <button onClick={() => onCreateNote(undefined, undefined)} className="p-1 rounded hover:bg-[var(--bg-3)] text-[var(--fg-2)]" title="New note at root"><Icon name="plus" size={13} /></button>
             <NoteMenu 
               onDelete={() => activeId && onDeleteNote?.(activeId)}
               onRename={() => {
@@ -331,7 +347,7 @@ export const LeftSidebar = ({
             
             {filteredTree.map((child: any) => 
               child.type === 'folder' ? (
-                <FolderNode key={child.path} {...child} activeId={activeId} activeNoteFolderPath={activeNoteFolderPath} onSelect={onSelect} onMoveNode={onMoveNode} onDeleteFolder={onDeleteFolder} collapseTrigger={collapseTrigger} />
+                <FolderNode key={child.path} {...child} activeId={activeId} activeNoteFolderPath={activeNoteFolderPath} onSelect={onSelect} onMoveNode={onMoveNode} onDeleteFolder={onDeleteFolder} onCreateNote={onCreateNote} collapseTrigger={collapseTrigger} />
               ) : (
                 <NoteNode key={child.path} note={child.note!} activeId={activeId} onSelect={onSelect} />
               )
