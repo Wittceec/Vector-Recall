@@ -11,6 +11,10 @@ import { common, createLowlight } from "lowlight"
 import { SlashCommand } from "./editor/SlashCommand"
 import { Wikilink, setWikilinkTitles } from "./editor/extensions/Wikilink"
 import { Hashtag, setHashtags } from "./editor/extensions/Hashtag"
+import { Table } from '@tiptap/extension-table'
+import { TableRow } from '@tiptap/extension-table-row'
+import { TableCell } from '@tiptap/extension-table-cell'
+import { TableHeader } from '@tiptap/extension-table-header'
 import { Icon } from "./Icons"
 
 import { WikilinkDecorator } from "./editor/extensions/WikilinkDecorator"
@@ -60,6 +64,12 @@ export function Editor({ initialContent, onUpdate, className = "", noteTitles = 
       TaskItem.configure({
         nested: true,
       }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
       Placeholder.configure({
         placeholder: "Start typing, or type '/' for commands...",
       }),
